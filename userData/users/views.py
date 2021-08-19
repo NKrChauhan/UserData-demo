@@ -31,16 +31,20 @@ def detailUserinfoAPI(request, uid, *args, **kwargs):
         return Response({"message": "NotFound"}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
-@permission_classes([AllowAny, ])
-def editUserinfoAPI(request, *args, **kwargs):
+@permission_classes([AllowAny])
+def editUserinfoAPI(request, uid, *args, **kwargs):
     """
-    REST API for creating the Userinfo
+    REST API for edit the Userinfo
     """
-    serialized_obj = userSerializer(data=request.data)
-    if serialized_obj.is_valid(raise_exception=True):
-        Userinfo = serialized_obj.save()
-        Userinfo = userSerializer(Userinfo)
-        return Response({"Userinfo_obj": Userinfo.data}, status=status.HTTP_201_CREATED)
+    qs = Userinfo.objects.filter(id=uid)
+    qs = qs.first()
+    if qs is not None:
+        serialized_obj = userSerializer(qs,data=request.data)
+        if serialized_obj.is_valid(raise_exception=True):
+            edited = serialized_obj.save()
+            edited = userSerializer(edited)
+            return Response({"Userinfo_obj": edited.data}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message": "the form data is invalid"}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({"message": "the form data is invalid"}, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response({"message": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
